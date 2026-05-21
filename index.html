@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スクリーンタイム トラッカー</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .time-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .time-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .time-display {
+      font-size: 48px;
+      font-weight: 500;
+      color: #1976d2;
+      margin-bottom: 4px;
+    }
+
+    .time-max {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .progress-bar {
+      margin-top: 16px;
+      background: #eee;
+      border-radius: 8px;
+      height: 12px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1976d2, #4caf50);
+      transition: width 0.3s ease;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .refresh-btn {
+      padding: 6px 12px;
+      background: white;
+      color: #666;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+      background: #f5f5f5;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .task-item.completed {
+      background: #e8f5e9;
+      border-color: #4caf50;
+      opacity: 0.7;
+    }
+
+    .task-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .task-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #4caf50;
+    }
+
+    .task-name {
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+    }
+
+    .task-item.completed .task-name {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .task-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .minutes-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .delete-btn {
+      background: transparent;
+      color: #999;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+
+    .delete-btn:hover {
+      color: #f44336;
+    }
+
+    .add-task-section {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .add-task-inputs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .add-task-inputs input {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border 0.2s;
+    }
+
+    .add-task-inputs input:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+
+    .add-task-inputs input[type="text"] {
+      flex: 1;
+    }
+
+    .add-task-inputs input[type="number"] {
+      width: 70px;
+    }
+
+    .add-btn {
+      padding: 10px 16px;
+      background: #1976d2;
+      color: white;
+      border: 1px solid #1976d2;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .add-btn:hover {
+      background: #1565c0;
+    }
+
+    .add-task-hint {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .footer {
+      border-top: 1px solid #ddd;
+      padding-top: 16px;
+      text-align: center;
+    }
+
+    .reset-btn {
+      padding: 10px 16px;
+      background: white;
+      color: #666;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: #f5f5f5;
+    }
+
+    .sync-status {
+      margin-top: 24px;
+      padding: 12px;
+      background: white;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .error {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      display: none;
+    }
+
+    .error-message {
+      color: #f44336;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .error-detail {
+      color: #999;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>スクリーンタイム</h1>
+    <p class="subtitle">タスクをおえてスクリーンタイムをふやそう！</p>
+
+    <div id="loading" class="loading">
+      <p>データを読み込み中...</p>
+    </div>
+
+    <div id="error" class="error">
+      <p class="error-message">エラーがおきました</p>
+      <p class="error-detail" id="errorDetail"></p>
+      <button class="add-btn" onclick="location.reload()">もう一回よみこもう</button>
+    </div>
+
+    <div id="main" style="display: none;">
+      <div class="time-card">
+        <p class="time-label">今日のスクリーンタイム</p>
+        <div class="time-display" id="screenTime">30</div>
+        <p class="time-max">最大 60 分</p>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressBar" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>タスクいちらん</h2>
+          <button class="refresh-btn" onclick="refreshData()">更新</button>
+        </div>
+        <div id="taskList" class="task-list"></div>
+      </div>
+
+      <div class="section">
+        <h2 style="margin-bottom: 12px;">新しいタスクを追加</h2>
+        <div class="add-task-section">
+          <div class="add-task-inputs">
+            <input type="text" id="newTaskName" placeholder="タスク名を入力">
+            <input type="number" id="newTaskMinutes" placeholder="分数" min="1" max="30" value="5">
+            <button class="add-btn" onclick="addTask()">追加</button>
+          </div>
+          <p class="add-task-hint">※ デフォルトは5分です</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="reset-btn" onclick="resetAll()">リセット</button>
+      </div>
+
+      <div id="syncStatus" class="sync-status">
+        <span id="syncMessage"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/d/AKfycbw2_oROgT3CPNP-a-UYxNlbTqr5f9jIxYJrS6EUkG2ox1NFYV_OLbD5h6EfjjumJkhG1w/usercontent';
+    const DEFAULT_MINUTES = 30;
+    const MAX_MINUTES = 60;
+
+    let tasks = [];
+    let totalMinutes = DEFAULT_MINUTES;
+
+    async function apiCall(action, params = {}) {
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.append('action', action);
+        Object.keys(params).forEach(key => {
+          url.searchParams.append(key, params[key]);
+        });
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+          tasks = data.tasks || [];
+          totalMinutes = data.totalMinutes || DEFAULT_MINUTES;
+          return data;
+        } else {
+          throw new Error(data.error || 'Unknown error');
+        }
+      } catch (error) {
+        console.error('API Error:', error);
+        showError(error.message);
+        throw error;
+      }
+    }
+
+    async function loadData() {
+      try {
+        showElement('loading', true);
+        showElement('main', false);
+        showElement('error', false);
+
+        await apiCall('getTasks');
+
+        showElement('loading', false);
+        showElement('main', true);
+        renderTasks();
+        updateDisplay();
+      } catch (error) {
+        showElement('loading', false);
+        showElement('error', true);
+      }
+    }
+
+    function renderTasks() {
+      const taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+
+      tasks.forEach(task => {
+        const taskEl = document.createElement('div');
+        taskEl.className = `task-item ${task.completed ? 'completed' : ''}`;
+
+        const taskInfo = document.createElement('div');
+        taskInfo.className = 'task-info';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'task-checkbox';
+        checkbox.checked = task.completed;
+        checkbox.onchange = () => completeTask(task.id, checkbox.checked);
+
+        const label = document.createElement('div');
+        label.className = 'task-name';
+        label.textContent = task.name;
+
+        taskInfo.appendChild(checkbox);
+        taskInfo.appendChild(label);
+
+        const controls = document.createElement('div');
+        controls.className = 'task-controls';
+
+        const badge = document.createElement('div');
+        badge.className = 'minutes-badge';
+        badge.textContent = `+${task.minutes}分`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '削除';
+        deleteBtn.onclick = () => deleteTask(task.id);
+
+        controls.appendChild(badge);
+        controls.appendChild(deleteBtn);
+
+        taskEl.appendChild(taskInfo);
+        taskEl.appendChild(controls);
+
+        taskList.appendChild(taskEl);
+      });
+    }
+
+    async function completeTask(taskId, completed) {
+      try {
+        showSync('更新中...');
+        await apiCall('updateTask', { taskId, completed });
+        renderTasks();
+        updateDisplay();
+        showSync('更新しました');
+      } catch (error) {
+        console.error('Complete task error:', error);
+      }
+    }
+
+    async function addTask() {
+      const nameInput = document.getElementById('newTaskName');
+      const minutesInput = document.getElementById('newTaskMinutes');
+
+      const name = nameInput.value.trim();
+      const minutes = parseInt(minutesInput.value) || 5;
+
+      if (!name) {
+        alert('タスク名を入力してください');
+        return;
+      }
+
+      if (minutes < 1 || minutes > 30) {
+        alert('分数は1～30の範囲で入力してください');
+        return;
+      }
+
+      try {
+        showSync('追加中...');
+        await apiCall('addTask', { name, minutes });
+        renderTasks();
+        updateDisplay();
+        nameInput.value = '';
+        minutesInput.value = '5';
+        nameInput.focus();
+        showSync('タスクを追加しました');
+      } catch (error) {
+        console.error('Add task error:', error);
+      }
+    }
+
+    async function deleteTask(taskId) {
+      if (!confirm('このタスクを削除しますか？')) {
+        return;
+      }
+
+      try {
+        showSync('削除中...');
+        await apiCall('deleteTask', { taskId });
+        renderTasks();
+        updateDisplay();
+        showSync('削除しました');
+      } catch (error) {
+        console.error('Delete task error:', error);
+      }
+    }
+
+    async function resetAll() {
+      if (!confirm('すべてのタスクと時間をリセットしますか？')) {
+        return;
+      }
+
+      try {
+        showSync('リセット中...');
+        await apiCall('resetAll');
+        renderTasks();
+        updateDisplay();
+        showSync('リセットしました');
+      } catch (error) {
+        console.error('Reset error:', error);
+      }
+    }
+
+    async function refreshData() {
+      try {
+        showSync('更新中...');
+        await loadData();
+        showSync('更新しました');
+      } catch (error) {
+        console.error('Refresh error:', error);
+      }
+    }
+
+    function updateDisplay() {
+      document.getElementById('screenTime').textContent = totalMinutes;
+      const percentage = (totalMinutes / MAX_MINUTES) * 100;
+      document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    function showElement(id, show) {
+      document.getElementById(id).style.display = show ? 'block' : 'none';
+    }
+
+    function showError(message) {
+      document.getElementById('errorDetail').textContent = message;
+    }
+
+    function showSync(message) {
+      const syncStatus = document.getElementById('syncStatus');
+      document.getElementById('syncMessage').textContent = message;
+      syncStatus.style.display = 'block';
+      
+      setTimeout(() => {
+        syncStatus.style.display = 'none';
+      }, 2000);
+    }
+
+    document.getElementById('newTaskName').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    document.getElementById('newTaskMinutes').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    // Load data on startup
+    loadData();
+
+    // Auto-refresh every 5 seconds
+    setInterval(loadData, 5000);
+  </script>
+</body>
+</html>
