@@ -672,11 +672,6 @@
     modal.classList.add('show');
     content.style.animation = 'slideUp 3s ease-out forwards';
   }, 10);
-
-  // 3秒後に自動で閉じる
-  setTimeout(() => {
-    closeGacha();
-  }, 3000);
 }
 
     function closeGacha() {
@@ -697,7 +692,7 @@
 
     if (progress < 1) {
       // 揺れの強さを徐々に減らす
-      const intensity = (1 - progress) * 20;
+      const intensity = (1 - progress) * 30;
       const randomX = (Math.random() - 0.5) * intensity;
       const randomY = (Math.random() - 0.5) * intensity;
 
