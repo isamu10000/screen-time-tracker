@@ -656,48 +656,28 @@
     }
 
     function createFireworks() {
-  const colors = ['#ff6b6b', '#ffd43b', '#51cf66', '#74c0fc', '#ff922b', '#ff66ff'];
-  
-  // 画面中央に大きな爆発を作る
-  for (let i = 0; i < 100; i++) {
-    const particle = document.createElement('div');
-    particle.style.position = 'fixed';
-    particle.style.pointerEvents = 'none';
-    particle.style.zIndex = '9999';
-    particle.style.width = '15px';
-    particle.style.height = '15px';
-    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    particle.style.borderRadius = '50%';
-    particle.style.left = (window.innerWidth / 2) + 'px';
-    particle.style.top = (window.innerHeight / 2) + 'px';
-    document.body.appendChild(particle);
+  // 画面を揺らす効果
+  const duration = 4000; // 4秒
+  const startTime = Date.now();
 
-    // ランダムな方向に飛ぶ
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 50 + Math.random() * 300;
-    const tx = Math.cos(angle) * distance;
-    const ty = Math.sin(angle) * distance;
+  const shake = () => {
+    const elapsed = Date.now() - startTime;
+    const progress = elapsed / duration;
 
-    const duration = 3000 + Math.random() * 1000; // 3～4秒
-    const startTime = Date.now();
+    if (progress < 1) {
+      // 揺れの強さを徐々に減らす
+      const intensity = (1 - progress) * 10;
+      const randomX = (Math.random() - 0.5) * intensity;
+      const randomY = (Math.random() - 0.5) * intensity;
 
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+      document.body.style.transform = `translate(${randomX}px, ${randomY}px)`;
+      requestAnimationFrame(shake);
+    } else {
+      document.body.style.transform = 'translate(0, 0)';
+    }
+  };
 
-      particle.style.left = (window.innerWidth / 2 + tx * progress) + 'px';
-      particle.style.top = (window.innerHeight / 2 + ty * progress) + 'px';
-      particle.style.opacity = 1 - progress;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        particle.remove();
-      }
-    };
-
-    animate();
-  }
+  shake();
 }
 
     async function syncGachaBonus() {
