@@ -307,31 +307,46 @@
     }
 
     /* ガチャモーダル */
-    .gacha-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
+.gacha-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 1000;
+  pointer-events: none;
+}
 
-    .gacha-modal.show {
-      display: flex;
-    }
+.gacha-modal.show {
+  display: block;
+}
 
-    .gacha-content {
-      background: white;
-      border-radius: 20px;
-      padding: 40px;
-      text-align: center;
-      max-width: 400px;
-      animation: popIn 0.3s ease-out;
-    }
+.gacha-content {
+  position: fixed;
+  left: 50%;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  animation: slideUp 3s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    top: 100vh;
+    opacity: 0;
+  }
+  to {
+    top: 200px;
+    opacity: 1;
+  }
+}
 
     @keyframes popIn {
       from {
@@ -630,25 +645,39 @@
     }
 
     function showGachaResult(isHit, task) {
-      const modal = document.getElementById('gachaModal');
-      const resultEl = document.getElementById('gachaResult');
-      const messageEl = document.getElementById('gachaMessage');
-      const bonusEl = document.getElementById('gachaBonus');
+  const modal = document.getElementById('gachaModal');
+  const content = document.querySelector('.gacha-content');
+  const resultEl = document.getElementById('gachaResult');
+  const messageEl = document.getElementById('gachaMessage');
+  const bonusEl = document.getElementById('gachaBonus');
 
-      if (isHit) {
-        resultEl.textContent = '大当たり！🎉';
-        resultEl.className = 'gacha-result hit';
-        messageEl.textContent = 'すごいね！やったね！';
-        bonusEl.textContent = '+1分ボーナス！';
-      } else {
-        resultEl.textContent = 'ざんねん…';
-        resultEl.className = 'gacha-result miss';
-        messageEl.textContent = 'またチャレンジしてね！';
-        bonusEl.textContent = '';
-      }
+  if (isHit) {
+    resultEl.textContent = '大当たり！🎉';
+    resultEl.className = 'gacha-result hit';
+    messageEl.textContent = 'すごいね！やったね！';
+    bonusEl.textContent = '+1分ボーナス！';
+  } else {
+    resultEl.textContent = 'ざんねん…';
+    resultEl.className = 'gacha-result miss';
+    messageEl.textContent = 'またチャレンジしてね！';
+    bonusEl.textContent = '';
+  }
 
-      modal.classList.add('show');
-    }
+  // アニメーションをリセット
+  content.style.animation = 'none';
+  modal.classList.remove('show');
+  
+  // 次のフレームで再度アニメーション開始
+  setTimeout(() => {
+    modal.classList.add('show');
+    content.style.animation = 'slideUp 3s ease-out forwards';
+  }, 10);
+
+  // 3秒後に自動で閉じる
+  setTimeout(() => {
+    closeGacha();
+  }, 3000);
+}
 
     function closeGacha() {
       const modal = document.getElementById('gachaModal');
