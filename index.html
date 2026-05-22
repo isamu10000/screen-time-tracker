@@ -6,7 +6,7 @@
   <title>スクリーンタイム トラッカー</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Hina+Mincho&display=swap');
-    
+
     * {
       margin: 0;
       padding: 0;
@@ -14,7 +14,7 @@
     }
 
     body {
-      font-family: 'Hina Mincho', serif;
+  font-family: 'Hina Mincho', serif;
       background: #f5f5f5;
       padding: 20px;
     }
@@ -37,6 +37,7 @@
       font-size: 14px;
       color: #666;
       margin-bottom: 24px;
+      line-height: 1.5;
     }
 
     .time-card {
@@ -208,6 +209,7 @@
       border-radius: 8px;
       font-size: 14px;
       transition: border 0.2s;
+      font-family: 'Niramit', sans-serif;
     }
 
     .add-task-inputs input:focus {
@@ -233,6 +235,7 @@
       font-weight: 500;
       font-size: 14px;
       transition: all 0.2s;
+      font-family: 'Niramit', sans-serif;
     }
 
     .add-btn:hover {
@@ -259,6 +262,7 @@
       cursor: pointer;
       font-size: 13px;
       transition: all 0.2s;
+      font-family: 'Niramit', sans-serif;
     }
 
     .reset-btn:hover {
@@ -301,19 +305,136 @@
       font-size: 13px;
       margin-bottom: 16px;
     }
+
+    /* ガチャモーダル */
+    .gacha-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gacha-modal.show {
+      display: flex;
+    }
+
+    .gacha-content {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      animation: popIn 0.3s ease-out;
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .gacha-result {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 20px 0;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gacha-result.hit {
+      color: #ff6b6b;
+      animation: bounce 0.6s ease-in-out;
+    }
+
+    .gacha-result.miss {
+      color: #666;
+      animation: shake 0.6s ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      25% { transform: translateY(-20px); }
+      50% { transform: translateY(0); }
+      75% { transform: translateY(-10px); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+    }
+
+    .gacha-message {
+      font-size: 18px;
+      margin: 15px 0;
+      color: #333;
+    }
+
+    .gacha-bonus {
+      font-size: 16px;
+      color: #4caf50;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .gacha-close-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: 'Niramit', sans-serif;
+    }
+
+    .gacha-close-btn:hover {
+      background: #1565c0;
+    }
+
+    /* 花火アニメーション */
+    .firework {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .firework-particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-<h1>タスクを終えて、スクリーンタイムをふやそう<br>（スクリーンタイムとは、テレビ、YouTube、タブレットをみたりあそんだりするじかんのことだよ）</h1>
+    <h1>スクリーンタイム</h1>
+    <p class="subtitle">タスクを終えて、スクリーンタイムをふやそう<br>（スクリーンタイム、テレビ、YouTube、タブレットをみたりあそんだりするじかんのことだよ）</p>
+
     <div id="loading" class="loading">
       <p>データを読み込み中...</p>
     </div>
 
     <div id="error" class="error">
-      <p class="error-message">エラーがおきました</p>
+      <p class="error-message">エラーが発生しました</p>
       <p class="error-detail" id="errorDetail"></p>
-      <button class="add-btn" onclick="location.reload()">もう一回よみこもう</button>
+      <button class="add-btn" onclick="location.reload()">再度読み込む</button>
     </div>
 
     <div id="main" style="display: none;">
@@ -328,7 +449,7 @@
 
       <div class="section">
         <div class="section-header">
-          <h2>タスクいちらん</h2>
+          <h2>タスク一覧</h2>
           <button class="refresh-btn" onclick="refreshData()">更新</button>
         </div>
         <div id="taskList" class="task-list"></div>
@@ -356,10 +477,23 @@
     </div>
   </div>
 
+  <!-- ガチャモーダル -->
+  <div id="gachaModal" class="gacha-modal">
+    <div class="gacha-content">
+      <div style="font-size: 48px; margin-bottom: 20px;">🎰</div>
+      <div id="gachaResult" class="gacha-result"></div>
+      <p class="gacha-message" id="gachaMessage"></p>
+      <p class="gacha-bonus" id="gachaBonus"></p>
+      <button class="gacha-close-btn" onclick="closeGacha()">とじる</button>
+    </div>
+  </div>
+
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxB7axo3e76dgHRjMPKjYs6xZe6e-vn_qoVZhWLUVeiieUZ1tUiMhCQvwS8hd9RSV4Lbw/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbw2_oROgT3CPNP-a-UYxNlbTqr5f9jIxYJrS6EUkG2ox1NFYV_OLbD5h6EfjjumJkhG1w/exec';
     const DEFAULT_MINUTES = 30;
     const MAX_MINUTES = 60;
+    const HIT_PROBABILITY = 0.33; // 33%
+    const BONUS_MINUTES = 1;
 
     let tasks = [];
     let totalMinutes = DEFAULT_MINUTES;
@@ -460,8 +594,114 @@
         renderTasks();
         updateDisplay();
         showSync('更新しました');
+
+        // タスク完了時にガチャを実行
+        if (completed) {
+          setTimeout(() => {
+            playGacha(taskId);
+          }, 500);
+        }
       } catch (error) {
         console.error('Complete task error:', error);
+      }
+    }
+
+    function playGacha(taskId) {
+      const isHit = Math.random() < HIT_PROBABILITY;
+      const task = tasks.find(t => t.id === taskId);
+
+      if (isHit) {
+        // 当たり
+        showGachaResult(true, task);
+        createFireworks();
+        
+        // ボーナスタイムを追加
+        if (totalMinutes + BONUS_MINUTES <= MAX_MINUTES) {
+          totalMinutes += BONUS_MINUTES;
+        } else {
+          totalMinutes = MAX_MINUTES;
+        }
+        updateDisplay();
+        syncGachaBonus();
+      } else {
+        // ハズレ
+        showGachaResult(false, task);
+      }
+    }
+
+    function showGachaResult(isHit, task) {
+      const modal = document.getElementById('gachaModal');
+      const resultEl = document.getElementById('gachaResult');
+      const messageEl = document.getElementById('gachaMessage');
+      const bonusEl = document.getElementById('gachaBonus');
+
+      if (isHit) {
+        resultEl.textContent = '大当たり！🎉';
+        resultEl.className = 'gacha-result hit';
+        messageEl.textContent = 'すごいね！やったね！';
+        bonusEl.textContent = '+1分ボーナス！';
+      } else {
+        resultEl.textContent = 'ざんねん…';
+        resultEl.className = 'gacha-result miss';
+        messageEl.textContent = 'またチャレンジしてね！';
+        bonusEl.textContent = '';
+      }
+
+      modal.classList.add('show');
+    }
+
+    function closeGacha() {
+      const modal = document.getElementById('gachaModal');
+      modal.classList.remove('show');
+    }
+
+    function createFireworks() {
+      const colors = ['#ff6b6b', '#ffd43b', '#51cf66', '#74c0fc', '#ff922b'];
+      const particleCount = 50;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'firework-particle';
+        particle.style.left = window.innerWidth / 2 + 'px';
+        particle.style.top = window.innerHeight / 2 + 'px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        document.body.appendChild(particle);
+
+        const angle = (Math.PI * 2 * i) / particleCount;
+        const velocity = 5 + Math.random() * 5;
+        const vx = Math.cos(angle) * velocity;
+        const vy = Math.sin(angle) * velocity;
+
+        let x = window.innerWidth / 2;
+        let y = window.innerHeight / 2;
+        let opacity = 1;
+
+        const animate = () => {
+          x += vx;
+          y += vy;
+          opacity -= 0.02;
+
+          particle.style.left = x + 'px';
+          particle.style.top = y + 'px';
+          particle.style.opacity = opacity;
+
+          if (opacity > 0) {
+            requestAnimationFrame(animate);
+          } else {
+            particle.remove();
+          }
+        };
+
+        animate();
+      }
+    }
+
+    async function syncGachaBonus() {
+      // サーバーに現在の totalMinutes を同期
+      try {
+        await apiCall('getTasks');
+      } catch (error) {
+        console.error('Sync error:', error);
       }
     }
 
@@ -568,6 +808,13 @@
 
     document.getElementById('newTaskMinutes').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') addTask();
+    });
+
+    // ガチャモーダルをクリックで閉じる
+    document.getElementById('gachaModal').addEventListener('click', (e) => {
+      if (e.target.id === 'gachaModal') {
+        closeGacha();
+      }
     });
 
     // Load data on startup
