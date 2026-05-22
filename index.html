@@ -680,9 +680,11 @@
 }
 
     function closeGacha() {
-      const modal = document.getElementById('gachaModal');
-      modal.classList.remove('show');
-    }
+  const modal = document.getElementById('gachaModal');
+  const content = document.querySelector('.gacha-content');
+  modal.classList.remove('show');
+  content.style.animation = 'none';
+}
 
     function createFireworks() {
   // 画面を揺らす効果
@@ -695,7 +697,7 @@
 
     if (progress < 1) {
       // 揺れの強さを徐々に減らす
-      const intensity = (1 - progress) * 10;
+      const intensity = (1 - progress) * 20;
       const randomX = (Math.random() - 0.5) * intensity;
       const randomY = (Math.random() - 0.5) * intensity;
 
