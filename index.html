@@ -504,7 +504,7 @@
   </div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbw2_oROgT3CPNP-a-UYxNlbTqr5f9jIxYJrS6EUkG2ox1NFYV_OLbD5h6EfjjumJkhG1w/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTNwEHZCik8CWg6JKPXGqD85dRTdqcGUxTNJMn3c0X7-yqu8-TWbultGd2vKaW5slEmA/exec';
     const DEFAULT_MINUTES = 30;
     const MAX_MINUTES = 60;
     const HIT_PROBABILITY = 0.33; // 33%
@@ -707,13 +707,23 @@
 }
 
     async function syncGachaBonus() {
-      // サーバーに現在の totalMinutes を同期
-      try {
-        await apiCall('getTasks');
-      } catch (error) {
-        console.error('Sync error:', error);
-      }
+  // サーバーに1分ボーナスを追加
+  try {
+    const url = new URL(API_URL);
+    url.searchParams.append('action', 'addBonus');
+    url.searchParams.append('minutes', BONUS_MINUTES);
+
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.success) {
+      totalMinutes = data.totalMinutes || DEFAULT_MINUTES;
+      updateDisplay();
     }
+  } catch (error) {
+    console.error('Sync error:', error);
+  }
+}
 
     async function addTask() {
       const nameInput = document.getElementById('newTaskName');
